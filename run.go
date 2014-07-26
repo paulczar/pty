@@ -1,6 +1,7 @@
 package pty
 
 import (
+	"log"
 	"os"
 	"os/exec"
 	"syscall"
@@ -15,6 +16,11 @@ func Start(c *exec.Cmd) (pty *os.File, err error) {
 		return nil, err
 	}
 	defer tty.Close()
+
+	if IsTerminal(pty) == false {
+		return nil, ErrNotTerminal
+	}
+
 	c.Stdout = tty
 	c.Stdin = tty
 	c.Stderr = tty
@@ -25,4 +31,21 @@ func Start(c *exec.Cmd) (pty *os.File, err error) {
 		return nil, err
 	}
 	return pty, err
+}
+
+// Start raw acts as Start but put the terminal into raw mode. Returns an
+// additional function that should be used to restore the terminal state.
+func StartRaw(c *exec.Cmd) (pty *os.File, restore func(), err error) {
+	pty, err = Start(c)
+	oldState, err := MakeRaw(pty)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return pty, func() {
+		var err error
+		if err = Restore(pty, oldState); err != nil {
+			log.Fatal(err)
+		}
+	}, nil
 }
