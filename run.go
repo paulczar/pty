@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"syscall"
 
-	"code.google.com/p/go.crypto/ssh/terminal"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // Start assigns a pseudo-terminal tty os.File to c.Stdin, c.Stdout,
